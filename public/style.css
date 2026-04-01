@@ -1,0 +1,277 @@
+:root {
+  --bg-color: #1a1a1a;
+  --primary-color: #2a2a2a;
+  --secondary-color: #3a3a3a;
+  --font-color: #f0f0f0;
+  --accent-color: #007bff;
+  --accent-hover: #0056b3;
+  --border-color: #444;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--font-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
+}
+
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: auto;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  color: var(--accent-color);
+}
+
+header p {
+  font-size: 1.1rem;
+  color: #aaa;
+}
+
+main {
+  margin-top: 2rem;
+  background-color: var(--primary-color);
+  padding: 2rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+.audio-toggle {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.audio-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+#controls button {
+  background-color: var(--accent-color);
+  color: var(--font-color);
+  border: none;
+  padding: 15px 30px;
+  margin: 10px;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-weight: bold;
+}
+
+#controls button:hover {
+  background-color: var(--accent-hover);
+}
+
+#status {
+  margin-top: 1.5rem;
+  min-height: 24px;
+  font-size: 1rem;
+  color: #ccc;
+}
+
+.share-info {
+  display: none; /* Oculto por defecto */
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: var(--secondary-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+.share-info p {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #ccc;
+}
+.share-info input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem;
+  background-color: var(--bg-color);
+  color: var(--font-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+#video {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin-top: 1.5rem;
+  background-color: #000;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  display: none; /* Oculto hasta que comience la transmisión */
+  transition: transform 0.1s ease; /* Para suavizar el zoom */
+}
+
+#video-container {
+  position: relative;
+  overflow: hidden; /* Clave para el efecto lupa */
+  border-radius: 8px;
+  min-height: 100px;
+}
+
+#video-container.lupa-active {
+  cursor: crosshair;
+}
+
+#video-container.lupa-active #video {
+  transform-origin: 0 0;
+  transform: scale(2.5); /* Factor de zoom para la lupa */
+}
+
+#viewer-controls {
+  display: none; /* Oculto por defecto, visible para espectadores */
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background-color: var(--secondary-color);
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+#viewer-controls button {
+  background-color: var(--accent-color);
+  color: var(--font-color);
+  border: none;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#viewer-controls button:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Estilos para el Toggle Switch de la Lupa */
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: var(--accent-color);
+}
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+footer {
+  margin-top: 3rem;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+/* --- Estilos para Móviles --- */
+@media (max-width: 768px) {
+  main {
+    padding: 1rem;
+  }
+
+  header h1 {
+    font-size: 2rem;
+  }
+
+  #controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #controls button {
+    width: 90%;
+    padding: 12px;
+  }
+
+  #viewer-controls {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  #viewer-controls button {
+    width: 100%;
+  }
+
+  .toggle-switch {
+    width: 100%;
+    justify-content: space-between;
+    padding: 0 10px;
+  }
+}
+
+#watermark-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 10;
+  pointer-events: none; /* Para que no interfiera con el video */
+}
+
+.watermark {
+  background-color: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 4px 8px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  font-size: 14px;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}

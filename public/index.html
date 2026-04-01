@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScreenShare Web</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>ScreenShare Web</h1>
+      <p>Transmisión de pantalla en tu red local</p>
+    </header>
+
+    <main>
+      <div id="controls">
+        <div class="audio-toggle">
+          <input type="checkbox" id="enable-audio-chat">
+          <label for="enable-audio-chat">Habilitar Micrófono (para charlar)</label>
+        </div>
+        <div class="audio-toggle">
+          <input type="checkbox" id="optimize-network">
+          <label for="optimize-network">Optimizar para Red Lenta</label>
+        </div>
+        <button id="presenterBtn">1. Iniciar Transmisión de Pantalla</button>
+        <button id="viewerBtn">2. Ver Transmisión</button>
+      </div>
+      
+      <div id="status"></div>
+
+      <div id="share-info" class="share-info">
+        <p>Pide a los espectadores que abran esta dirección en su navegador:</p>
+        <input type="text" id="share-url" readonly>
+      </div>
+
+      <div id="video-container">
+        <video id="video" autoplay playsinline></video>
+        <div id="watermark-container"></div>
+      </div>
+
+      <div id="viewer-controls">
+        <button id="fullscreen-btn">Pantalla Completa</button>
+        <button id="pip-btn">Ventana Flotante (PiP)</button>
+        <div class="toggle-switch">
+          <label for="lupa-toggle">Lupa</label>
+          <label class="switch">
+            <input type="checkbox" id="lupa-toggle">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Desarrollado por Gemini. Funcionando localmente.</p>
+    </footer>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
