@@ -1,12 +1,16 @@
 const express = require('express');
-const http = require('http');
+const https = require('https');
 const socketIo = require('socket.io');
 const os = require('os');
 const fs = require('fs');
 
 const app = express();
 
-const server = http.createServer(app);
+const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+const server = https.createServer(options, app);
 const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
@@ -112,8 +116,8 @@ function getPresenterSocket() {
 }
 
 server.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`Accesible en la red local en: http://${localIp}:${PORT}`);
+  console.log(`Servidor corriendo en https://localhost:${PORT}`);
+  console.log(`Accesible en la red local en: https://${localIp}:${PORT}`);
 });
 
 // Manejo de cierre ordenado (Ctrl+C)

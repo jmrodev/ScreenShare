@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
       hideControls();
 
       const serverInfo = await fetch('/api/get-ip').then(res => res.json());
-      const url = `http://${serverInfo.ip}:${serverInfo.port}`;
+      const url = `https://${serverInfo.ip}:${serverInfo.port}`;
       shareUrlEl.value = url;
       shareInfoEl.style.display = 'block';
       statusEl.textContent = '¡Transmitiendo! Pide a los demás que usen la dirección de arriba.';
