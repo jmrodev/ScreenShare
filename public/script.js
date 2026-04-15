@@ -70,12 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
       hideControls();
 
       const serverInfo = await fetch('/api/get-ip').then(res => res.json());
-      const url = `https://${serverInfo.ip}:${serverInfo.port}`;
+      const url = `http://${serverInfo.ip}:${serverInfo.port}`;
       shareUrlEl.value = url;
       shareInfoEl.style.display = 'block';
       statusEl.textContent = '¡Transmitiendo! Pide a los demás que usen la dirección de arriba.';
 
       socket.emit('presenter');
+      setupVideoControls();
+      viewerControls.style.display = 'flex';
 
       socket.on('viewer-request', ({ viewerId, username }) => {
         if (!username) return; // Sanity check
@@ -150,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   socket.on('presenter-available', () => {
     if (statusEl.textContent === 'Buscando una transmisión...') {
-      socket.emit('viewer');
+      socket.emit('viewer', { username });
     }
   });
   
@@ -188,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         videoEl.style.display = 'block';
         viewerControls.style.display = 'flex';
         statusEl.textContent = 'Viendo la transmisión.';
-        setupViewerControls();
+        setupVideoControls();
       }
     };
 
@@ -214,8 +216,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- Lógica de Controles del Espectador ---
-  function setupViewerControls() {
+  socket.on('disconnect', (reason) => {
+    console.log('Desconectado del servidor:', reason);
+    statusEl.textContent = 'Se ha perdido la conexión con el servidor.';
+    videoEl.style.display = 'none';
+    videoEl.srcObject = null;
+    viewerControls.style.display = 'none';
+    showControls();
+  });
+
+  // --- Lógica de Controles de Video (Zoom, Fullscreen, PiP) ---
+  let zoomScale = 2.5;
+  let initialPinchDistance = null;
+  let isControlsSetup = false;
+
+  function updateZoom() {
+    videoContainer.style.setProperty('--zoom-scale', zoomScale);
+  }
+
+  function setupVideoControls() {
+    if (isControlsSetup) return;
+    isControlsSetup = true;
+
     fullscreenBtn.onclick = () => {
       if (videoContainer.requestFullscreen) {
         videoContainer.requestFullscreen();
@@ -236,6 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     lupaToggle.onchange = () => {
       videoContainer.classList.toggle('lupa-active', lupaToggle.checked);
+      if (lupaToggle.checked) updateZoom();
     };
 
     const isTouchDevice = ('ontouchstart' in window);
@@ -243,22 +266,87 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleLupaMove = (e) => {
       if (!videoContainer.classList.contains('lupa-active')) return;
       
-      e.preventDefault();
-
       const rect = videoContainer.getBoundingClientRect();
-      const clientX = isTouchDevice ? e.touches[0].clientX : e.clientX;
-      const clientY = isTouchDevice ? e.touches[0].clientY : e.clientY;
+      const clientX = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+      const clientY = (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
 
       const x = (clientX - rect.left) / rect.width * 100;
       const y = (clientY - rect.top) / rect.height * 100;
       videoEl.style.transformOrigin = `${x}% ${y}%`;
     };
 
-    if (isTouchDevice) {
-      videoContainer.addEventListener('touchmove', handleLupaMove, { passive: false });
-    } else {
+    // Zoom con rueda del ratón
+    videoContainer.addEventListener('wheel', (e) => {
+      if (!lupaToggle.checked) return;
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.3 : 0.3;
+      zoomScale = Math.min(Math.max(1.1, zoomScale + delta), 10);
+      updateZoom();
+    }, { passive: false });
+
+    // Zoom con gestos (pinch) y movimiento
+    videoContainer.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        initialPinchDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+      }
+    });
+
+    videoContainer.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && initialPinchDistance) {
+        e.preventDefault();
+        const currentDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const delta = (currentDistance - initialPinchDistance) / 50;
+        zoomScale = Math.min(Math.max(1.1, zoomScale + delta), 10);
+        updateZoom();
+        initialPinchDistance = currentDistance;
+        
+        if (!lupaToggle.checked) {
+            lupaToggle.checked = true;
+            videoContainer.classList.add('lupa-active');
+        }
+      } else if (e.touches.length === 1 && lupaToggle.checked) {
+        handleLupaMove(e);
+      }
+    }, { passive: false });
+
+    if (!isTouchDevice) {
       videoContainer.addEventListener('mousemove', handleLupaMove);
     }
+
+    // Atajos de teclado
+    document.addEventListener('keydown', (e) => {
+      // Solo actuar si el video está visible
+      if (videoEl.style.display === 'none') return;
+
+      const key = e.key.toLowerCase();
+      
+      if (key === 'l') {
+        lupaToggle.checked = !lupaToggle.checked;
+        lupaToggle.onchange();
+      }
+
+      if (!lupaToggle.checked) return;
+
+      if (key === '+' || key === '=') {
+        e.preventDefault();
+        zoomScale = Math.min(zoomScale + 0.5, 10);
+        updateZoom();
+      } else if (key === '-') {
+        e.preventDefault();
+        zoomScale = Math.max(zoomScale - 0.5, 1.1);
+        updateZoom();
+      } else if (key === '0') {
+        e.preventDefault();
+        zoomScale = 2.5;
+        updateZoom();
+      }
+    });
   }
 
   // --- Funciones de Utilidad ---

@@ -133,7 +133,7 @@ main {
 
 #video-container.lupa-active #video {
   transform-origin: 0 0;
-  transform: scale(2.5); /* Factor de zoom para la lupa */
+  transform: scale(var(--zoom-scale, 2.5));
 }
 
 #viewer-controls {

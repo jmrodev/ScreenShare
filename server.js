@@ -1,16 +1,12 @@
 const express = require('express');
-const https = require('https');
+const http = require('http');
 const socketIo = require('socket.io');
 const os = require('os');
 const fs = require('fs');
 
 const app = express();
 
-const options = {
-  key: fs.readFileSync('key.pem'),
-  cert: fs.readFileSync('cert.pem')
-};
-const server = https.createServer(options, app);
+const server = http.createServer(app);
 const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
@@ -53,7 +49,8 @@ io.on('connection', (socket) => {
   socket.on('viewer', (data) => {
     const presenterSocket = getPresenterSocket();
     if (presenterSocket) {
-      presenterSocket.emit('viewer-request', { viewerId: socket.id, username: data.username });
+      const username = (data && data.username) ? data.username : 'Anónimo';
+      presenterSocket.emit('viewer-request', { viewerId: socket.id, username });
     } else {
       socket.emit('no-presenter');
     }
@@ -61,26 +58,32 @@ io.on('connection', (socket) => {
 
   // Oferta WebRTC del presentador al espectador
   socket.on('offer', (data) => {
-    io.to(data.viewerId).emit('offer', {
-      sdp: data.sdp,
-      presenterId: socket.id,
-    });
+    if (data && data.viewerId) {
+      io.to(data.viewerId).emit('offer', {
+        sdp: data.sdp,
+        presenterId: socket.id,
+      });
+    }
   });
 
   // Respuesta WebRTC del espectador al presentador
   socket.on('answer', (data) => {
-    io.to(data.presenterId).emit('answer', {
-      sdp: data.sdp,
-      viewerId: socket.id,
-    });
+    if (data && data.presenterId) {
+      io.to(data.presenterId).emit('answer', {
+        sdp: data.sdp,
+        viewerId: socket.id,
+      });
+    }
   });
 
   // Candidatos ICE para establecer la conexión
   socket.on('candidate', (data) => {
-    io.to(data.toId).emit('candidate', {
-      candidate: data.candidate,
-      fromId: socket.id,
-    });
+    if (data && data.toId) {
+      io.to(data.toId).emit('candidate', {
+        candidate: data.candidate,
+        fromId: socket.id,
+      });
+    }
   });
 
   // Manejar desconexiones
@@ -109,6 +112,16 @@ function getPresenterSocket() {
 }
 
 server.listen(PORT, () => {
-  console.log(`Servidor corriendo en https://localhost:${PORT}`);
-  console.log(`Accesible en la red local en: https://${localIp}:${PORT}`);
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`Accesible en la red local en: http://${localIp}:${PORT}`);
+});
+
+// Manejo de cierre ordenado (Ctrl+C)
+process.on('SIGINT', () => {
+  console.log('\n[Servidor] Recibida señal de apagado. Notificando a usuarios...');
+  io.emit('presenter-disconnected'); 
+  server.close(() => {
+    console.log('[Servidor] Conexiones cerradas. Saliendo.');
+    process.exit(0);
+  });
 });
