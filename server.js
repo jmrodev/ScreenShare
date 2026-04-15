@@ -120,12 +120,29 @@ server.listen(PORT, () => {
   console.log(`Accesible en la red local en: https://${localIp}:${PORT}`);
 });
 
-// Manejo de cierre ordenado (Ctrl+C)
-process.on('SIGINT', () => {
-  console.log('\n[Servidor] Recibida señal de apagado. Notificando a usuarios...');
-  io.emit('presenter-disconnected'); 
-  server.close(() => {
-    console.log('[Servidor] Conexiones cerradas. Saliendo.');
-    process.exit(0);
+const shutdown = () => {
+  console.log('\n[Servidor] Recibida señal de apagado. Cerrando conexiones...');
+  
+  // Notificar a todos los clientes antes de desconectar
+  io.emit('presenter-disconnected');
+
+  // Cerramos Socket.io primero
+  io.close(() => {
+    console.log('[Servidor] Socket.io cerrado.');
+    // Luego el servidor HTTPS
+    server.close(() => {
+      console.log('[Servidor] Conexiones HTTPS cerradas. Saliendo.');
+      process.exit(0);
+    });
   });
-});
+
+  // Si después de 3 segundos no se ha cerrado limpiamente, forzamos la salida
+  setTimeout(() => {
+    console.error('[Servidor] El cierre limpio está tardando demasiado. Forzando salida...');
+    process.exit(1);
+  }, 3000).unref(); // .unref() permite que el proceso termine si el timer es lo único que queda
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
